@@ -14,7 +14,9 @@ You can control transcevier by writing **NetHackrf** class properties which are:
  - double **VGAGainDb**
  - double **TXVGAGainDb**
  - bool **AMPEnable**
+ <br>
 To start receiving or transmitting data you need to run **StartRX()** or **StartTX()** method of **NetHackrf** object which would return System.IO.Stream object. Stream object is used to write or read IQ interleaved data.
+<br>
 Hackrf is half-duplex device thus only one stream can be used at a time. Before using **StartRX()** or **StartTX()** methods again you should stop the existing stream by using it's **Dispose()** method.
 
 
