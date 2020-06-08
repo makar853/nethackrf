@@ -3,7 +3,7 @@ This project allows to control HackRF tranceivers using .net environment.
 
 # Usage
 
-Firstly you need to get list of connected hackrf devices by using **NetHackrf.HackrfDeviceList()** whick returns array of **NetHackrf.hackrf_device_info** objects.<br>
+Firstly you need to get list of connected hackrf devices by using **NetHackrf.HackrfDeviceList()** which returns array of **NetHackrf.hackrf_device_info** objects.<br>
 
 Each **NetHackrf.hackrf_device_info** object has **OpenDevice()** method which returns **NetHackrf** object.<br>
 
