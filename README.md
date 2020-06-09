@@ -24,6 +24,6 @@ You can control transcevier by writing **NetHackrf** class properties which are:
 
 
 # About
-This project uses precompiled dynamic link libraries which have been released under GNU LGPL v2.1 license and GNU GPL v2 license: <br>
+This project uses precompiled dynamic link libraries which have been released under GNU LGPL v2.1 license and BSD license: <br>
 libusb-1.0.dll https://github.com/libusb/libusb <br>
-hackrf.dll https://github.com/mossmann/hackrf/ 
+hackrf.dll https://github.com/mossmann/hackrf/tree/master/host/libhackrf
