@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace nethackrf
 {
 
-    internal class libhackrf // в этом классе все функции из hackrf.dll
+    internal class libhackrf // functions and types from hackrf.h
     {
         public const string dllname = @"hackrf.dll";
         public enum hackrf_error

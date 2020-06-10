@@ -17,18 +17,18 @@ namespace nethackrf
             max_length = 10240000;
             stream_buffer = new byte[max_length];
             buffer_semaphore = new Semaphore(1, 1);
-        }
+        } // private constructor. Can be called through NetHackrf.StartRX() or NetHackrf.StartTX() methods
         NetHackrf device;
-        Semaphore buffer_semaphore;
+        Semaphore buffer_semaphore; // semaphore is used to precent simultaneous access to steam_buffer which is used both by callback and read/write methods
 
         byte[] stream_buffer;
         int read_pos = 0;
         int write_pos = 0;
         int max_length;
         bool disposed = false;
-        internal libhackrf.hackrf_delegate callback;
+        internal libhackrf.hackrf_delegate callback; // callback delegate which pointer is used by libhackrf to exchange data with device
         Semaphore event_sem = new Semaphore(0, 1);
-        private void set_event()
+        private void set_event() // set_event and get_event are used to lower CPU usage while Write and Read methods are waiting for new portion of data
         {
             try
             {
@@ -40,12 +40,11 @@ namespace nethackrf
         }
         private void get_event()
         {
-            //if (event_sem.WaitOne(30000) == false) throw new TimeoutException();
             event_sem.WaitOne(5000);
         }
-        unsafe internal int StreamCallback(libhackrf.hackrf_transfer* transfer)
+        unsafe internal int StreamCallback(libhackrf.hackrf_transfer* transfer) // hackrf.dll calls this method to exchange data with device
         {
-            if (disposed || transfer == null)
+            if (disposed || transfer == null) // this method should be immedeately ended if stream is closed
             {
                 return 0;
             }
@@ -66,7 +65,6 @@ namespace nethackrf
                 buffer_semaphore.WaitOne();
                 for (int i = 0; i < transfer->valid_length; i++)
                 {
-                    //transfer->buffer[i] = stream_buffer[read_pos];
                     transfer->buffer[i] = stream_buffer[read_pos];
                     read_pos++;
                     if (read_pos >= stream_buffer.Length) read_pos = 0;
@@ -85,7 +83,7 @@ namespace nethackrf
         {
             get; private set;
         }
-        private void SetOverrunError()
+        private void SetOverrunError() // creates warning of buffer overrun and stops device streaming if necessary
         {
             OverrunError = true;
             if (device.mode == NetHackrf.transceiver_mode_t.TX)
@@ -93,7 +91,7 @@ namespace nethackrf
                 stop_tx_async();
             }
         }
-        private async void stop_tx_async()
+        private async void stop_tx_async() // asynchronous method is used to stop hackrf streaming because hackrf_stop_tx can't be called inside of callback function thread
         {
             await Task.Run(() =>
             {
@@ -108,7 +106,7 @@ namespace nethackrf
                     buffer_semaphore.Release();
                 }
             });
-        } // вызывается при overrun error и отключает передатчик до новых данных. Асинхронно, потому что нельзя вызвать hackrf_stop_tx из callback функции
+        }
         public override bool CanRead { get => device.mode == NetHackrf.transceiver_mode_t.RX; }
         public override bool CanWrite { get => device.mode == NetHackrf.transceiver_mode_t.TX; }
 
@@ -132,13 +130,13 @@ namespace nethackrf
             buffer_semaphore.Release();
         }
 
-        public override int Read(byte[] buffer, int offset = 0, int count = -1)
+        public override int Read(byte[] buffer, int offset = 0, int count = -1) // implementation of Stream.Read(...) method
         {
             if (disposed) throw new EndOfStreamException();
             if (count < 0) count = buffer.Length;
             if ( device.mode == NetHackrf.transceiver_mode_t.RX)
             {
-                if (count > stream_buffer.Length / 2)
+                if (count > stream_buffer.Length / 2) // if needed data length is bigger than half of buffer size then transfer should be devided into smaller parts
                 {
                     int blocksize = stream_buffer.Length / 2;
                     int curpos = 0;
@@ -161,10 +159,10 @@ namespace nethackrf
                         if (!device.IsStreaming) throw new IOException("HackRF is not streaming data!");
                         avail = write_pos - read_pos;
                         if (avail < 0) avail += stream_buffer.Length;
-                        if ( avail < count ) get_event();
-                    } while (avail < count);
+                        if ( avail < count ) get_event(); // waiting for next callback to lower cpu usage
+                    } while (avail < count); // waiting for required data amount in buffer
                     buffer_semaphore.WaitOne();
-                    for (int i = 0; i < count; i++)
+                    for (int i = 0; i < count; i++) // reading data from stream buffer
                     {
                         buffer[i + offset] = stream_buffer[read_pos];
                         read_pos++;
@@ -197,21 +195,19 @@ namespace nethackrf
             Flush();
         }
 
-        unsafe public override void Write(byte[] buffer, int offset = 0, int count = -1)
+        unsafe public override void Write(byte[] buffer, int offset = 0, int count = -1) // implementation of Stream.Write(...) method
         {
             if (disposed) throw new EndOfStreamException();
             if (count < 0) count = buffer.Length;
             if (device.mode == NetHackrf.transceiver_mode_t.TX)
             {
-                if (count > stream_buffer.Length / 2)
+                if (count > stream_buffer.Length / 2) // if needed data length is bigger than half of buffer size then transfer should be devided into smaller parts
                 {
-                    //System.Console.WriteLine("writing in blocks");
                     int blocksize = stream_buffer.Length / 2;
                     int curpos = 0;
                     do
                     {
                         Write(buffer, curpos, blocksize);
-                        //System.Console.WriteLine($"pos={curpos} bs={blocksize} left={count}");
                         count -= blocksize;
                         curpos += blocksize;
                         if (count < blocksize)
@@ -228,10 +224,10 @@ namespace nethackrf
                         if (!device.IsStreaming && device.TxStarted) throw new IOException("HackRF is not streaming data!");
                         avail = read_pos - write_pos;
                         if (avail <= 0) avail += stream_buffer.Length;
-                        if (avail < count) get_event();
-                    } while (avail < count);
+                        if (avail < count) get_event(); // waiting for next callback to lower cpu usage
+                    } while (avail < count); // waiting for required data amount in buffer
                     buffer_semaphore.WaitOne();
-                    for (int i = 0; i < count; i++)
+                    for (int i = 0; i < count; i++) // writing data to stream buffer
                     {
                         stream_buffer[write_pos] = buffer[i + offset];
                         write_pos++;
@@ -250,7 +246,7 @@ namespace nethackrf
                 throw new NotImplementedException();
             }
         }
-        unsafe protected override void Dispose(bool disposing)
+        unsafe protected override void Dispose(bool disposing) // dispose method is used to stop device transmitter or receiver. Stream must be disposed before new stream creating attempt
         {
             if (disposed == false)
             {
