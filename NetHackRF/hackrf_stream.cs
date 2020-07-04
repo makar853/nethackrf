@@ -122,6 +122,10 @@ namespace nethackrf
 
         public override void Flush()
         {
+            throw new NotImplementedException();
+        }
+        public void Clear() // creates empty buffer
+        {
             if (disposed) throw new EndOfStreamException();
             buffer_semaphore.WaitOne();
             stream_buffer = new byte[max_length];
@@ -192,7 +196,7 @@ namespace nethackrf
             if (disposed) throw new EndOfStreamException();
             if (value > int.MaxValue) throw new System.OutOfMemoryException();
             max_length = (int)value;
-            Flush();
+            Clear();
         }
 
         unsafe public override void Write(byte[] buffer, int offset = 0, int count = -1) // implementation of Stream.Write(...) method
