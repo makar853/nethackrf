@@ -53,6 +53,33 @@ namespace nethackrf
             if (error != libhackrf.hackrf_error.HACKRF_SUCCESS) throw new Exception(error.ToString());
             return ret;
         } // reads register of hackrf chip
-
+        public unsafe void SpiflashErase()
+        {
+            var error = libhackrf.hackrf_spiflash_erase(device);
+            if (error != libhackrf.hackrf_error.HACKRF_SUCCESS) throw new Exception(error.ToString("G"));
+        }
+        public unsafe void SpiflashWrite(byte[] data, uint address)
+        {
+            libhackrf.hackrf_error error;
+            if (address > ushort.MaxValue) throw new ArgumentOutOfRangeException();
+            fixed (byte* ptr = data)
+            {
+                error = libhackrf.hackrf_spiflash_write(device, address, (ushort)data.Length, ptr);
+            }
+            if (error != libhackrf.hackrf_error.HACKRF_SUCCESS) throw new Exception(error.ToString("G"));
+        }
+        public unsafe byte[] SpiflashRead(uint size, uint address)
+        {
+            libhackrf.hackrf_error error;
+            if (address > ushort.MaxValue) throw new ArgumentOutOfRangeException();
+            if (size > ushort.MaxValue) throw new ArgumentOutOfRangeException();
+            byte[] data = new byte[size];
+            fixed (byte* ptr = data)
+            {
+                error = libhackrf.hackrf_spiflash_read(device, address, (ushort)data.Length, ptr);
+            }
+            if (error != libhackrf.hackrf_error.HACKRF_SUCCESS) throw new Exception(error.ToString("G"));
+            return data;
+        }
     } // this class defines low-level programming methods
 }

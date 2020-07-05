@@ -131,5 +131,16 @@ namespace nethackrf
         unsafe public static extern hackrf_error hackrf_rffc5071_read(hackrf_device* device, byte register_number, UInt16* value);
         [DllImport(dllname)]
         unsafe public static extern hackrf_error hackrf_rffc5071_write(hackrf_device* device, byte register_number, UInt16 value);
+        // flash programming functions
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_erase(hackrf_device* device);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_write(hackrf_device* device, UInt32 address, UInt16 length, byte* data);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_read(hackrf_device* device, UInt32 address, UInt16 length, byte* data);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_status(hackrf_device* device, byte* data);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_clear_status(hackrf_device* device);
     }
 }
