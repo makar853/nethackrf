@@ -59,7 +59,7 @@ namespace nethackrf
             public hackrf_board usb_board_id;
             public int usb_device_index;
         };
-        unsafe private NetHackrf(libhackrf.hackrf_device* device) // NetHackrf class constructor. hackrf_device_info.OpenDevice() is needed to create NetHackrf object
+        unsafe internal NetHackrf(libhackrf.hackrf_device* device) // NetHackrf class constructor. hackrf_device_info.OpenDevice() is needed to create NetHackrf object
         {
             this.device = device;
             mode = transceiver_mode_t.OFF;
@@ -105,7 +105,6 @@ namespace nethackrf
         unsafe public static hackrf_device_info[] HackrfDeviceList() // Enumerates connected hackrf devices
         {
             libhackrf.hackrf_device_list_t* ptr = libhackrf.hackrf_device_list();
-            //if (ptr == null) throw new Exception("Null pointer returned");
             if (ptr == null) return new hackrf_device_info[0];
             libhackrf.hackrf_device_list_t devs = *ptr;
             hackrf_device_info[] ret = new hackrf_device_info[devs.devicecount];
