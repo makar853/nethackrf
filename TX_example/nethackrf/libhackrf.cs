@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 namespace nethackrf
 {
 
-    internal class libhackrf // в этом классе все функции из hackrf.dll
+    internal class libhackrf // functions and types from hackrf.h
     {
         public const string dllname = @"hackrf.dll";
         public enum hackrf_error
@@ -117,5 +117,30 @@ namespace nethackrf
         unsafe public static extern hackrf_error hackrf_reset(hackrf_device* device);
         [DllImport(dllname)]
         unsafe public static extern hackrf_error hackrf_set_clkout_enable(hackrf_device* device, byte value);
+
+        // low-level programming functions
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_max2837_read(hackrf_device* device, byte register_number, UInt16* value);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_max2837_write(hackrf_device* device, byte register_number, UInt16 value);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_si5351c_read(hackrf_device* device, UInt16 register_number, UInt16* value);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_si5351c_write(hackrf_device* device, UInt16 register_number, UInt16 value);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_rffc5071_read(hackrf_device* device, byte register_number, UInt16* value);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_rffc5071_write(hackrf_device* device, byte register_number, UInt16 value);
+        // flash programming functions
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_erase(hackrf_device* device);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_write(hackrf_device* device, UInt32 address, UInt16 length, byte* data);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_read(hackrf_device* device, UInt32 address, UInt16 length, byte* data);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_status(hackrf_device* device, byte* data);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_spiflash_clear_status(hackrf_device* device);
     }
 }

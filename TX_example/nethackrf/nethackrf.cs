@@ -59,7 +59,7 @@ namespace nethackrf
             public hackrf_board usb_board_id;
             public int usb_device_index;
         };
-        unsafe private NetHackrf(libhackrf.hackrf_device* device) // NetHackrf class constructor. hackrf_device_info.OpenDevice() is needed to create NetHackrf object
+        unsafe internal NetHackrf(libhackrf.hackrf_device* device) // NetHackrf class constructor. hackrf_device_info.OpenDevice() is needed to create NetHackrf object
         {
             this.device = device;
             mode = transceiver_mode_t.OFF;
@@ -70,7 +70,7 @@ namespace nethackrf
         {
             Dispose();
         }
-        unsafe public void Dispose()
+        unsafe public void Dispose() // NetHackrf.Dispose() or HackRFStream.Dispose() is needed to properly stop hackrf from transmitting/receiving.
         {
             if (disposed == false)
             {
@@ -81,7 +81,7 @@ namespace nethackrf
                 CheckHackrfError(libhackrf.hackrf_close(device));
                 disposed = true;
             }
-        } // NetHackrf.Dispose() or HackRFStream.Dispose() is needed to properly stop hackrf from transmitting/receiving.
+        } 
         unsafe private static string PtrToStr(byte* data) // transforms C string pointer to .net string
         {
             byte* bytes = data;
@@ -105,7 +105,6 @@ namespace nethackrf
         unsafe public static hackrf_device_info[] HackrfDeviceList() // Enumerates connected hackrf devices
         {
             libhackrf.hackrf_device_list_t* ptr = libhackrf.hackrf_device_list();
-            //if (ptr == null) throw new Exception("Null pointer returned");
             if (ptr == null) return new hackrf_device_info[0];
             libhackrf.hackrf_device_list_t devs = *ptr;
             hackrf_device_info[] ret = new hackrf_device_info[devs.devicecount];
@@ -120,17 +119,17 @@ namespace nethackrf
             }
             return ret;
         }
-        internal static void CheckHackrfError(libhackrf.hackrf_error error)
+        internal static void CheckHackrfError(libhackrf.hackrf_error error) // throws exceptions when hackRF error occurs
         {
             if (error != libhackrf.hackrf_error.HACKRF_SUCCESS)
             {
                 string method_name = new System.Diagnostics.StackTrace().GetFrame(1).GetMethod().Name;
                 throw new Exception($"Error \"{error}\" have occured in {method_name}.");
             }
-        } // throws hackRF exceptions
+        } 
         const Int32 api_version_length = 64;
         // most of hackrf functions are made as properties
-        unsafe public UInt16 UsbApiVersion
+        unsafe public UInt16 UsbApiVersion // returns hackrf usb api version
         {
             get
             {
@@ -138,8 +137,8 @@ namespace nethackrf
                 libhackrf.hackrf_usb_api_version_read(device, &version);
                 return version;
             }
-        } // returns hackrf usb api version
-        unsafe public string HackrfVersion
+        } 
+        unsafe public string HackrfVersion // returns hackrf firmware version
         {
             get
             {
@@ -150,41 +149,42 @@ namespace nethackrf
                 }
                 return System.Text.Encoding.ASCII.GetString(version);
             }
-        } // returns hackrf firmware version
-        unsafe public double FilterBandwidthMHz {
+        } 
+        unsafe public double FilterBandwidthMHz // configures internal filter
+        {
             set {
                 CheckHackrfError(libhackrf.hackrf_set_baseband_filter_bandwidth(device, (UInt32)(value * 1000000f)));
             }
-        } // configures internal filter
-        unsafe public double CarrierFrequencyMHz
+        } 
+        unsafe public double CarrierFrequencyMHz // sets carrier frequency in MHz
         {
             set
             {
                 CheckHackrfError(libhackrf.hackrf_set_freq(device, (UInt64)(value * 1000000f)));
             }
-        } // sets carrier frequency in MHz
-        unsafe public double SampleFrequencyMHz
+        } 
+        unsafe public double SampleFrequencyMHz // sets sampling frequency in MHz
         {
             set
             {
                 CheckHackrfError(libhackrf.hackrf_set_sample_rate(device, value * 1000000f));
             }
-        } // sets sampling frequency in MHz
-        unsafe public bool AntPower
+        } 
+        unsafe public bool AntPower // sets biasT power on/off
         {
             set
             {
                 CheckHackrfError(libhackrf.hackrf_set_antenna_enable(device, value ? (byte)1 : (byte)0));
             }
-        } // sets biasT power on/off
-        unsafe public bool ClkOut
+        }
+        unsafe public bool ClkOut // sets clkout on/off
         {
             set
             {
                 CheckHackrfError(libhackrf.hackrf_set_clkout_enable(device, value ? (byte)1 : (byte)0));
             }
-        } // sets clkout on/off
-        unsafe public double LNAGainDb
+        }
+        unsafe public double LNAGainDb // adjusts LNA gain in range from 0 dB to 40 dB with 8 dB steps
         {
             set
             {
@@ -194,8 +194,8 @@ namespace nethackrf
                 if (val > 40) val = 40;
                 CheckHackrfError(libhackrf.hackrf_set_lna_gain(device, (UInt32)val));
             }
-        } // adjusts LNA gain in range from 0 dB to 40 dB with 8 dB steps
-        unsafe public double VGAGainDb
+        } 
+        unsafe public double VGAGainDb // adjusts VGA gain in range from 0 dB to 62 dB with 2 dB steps
         {
             set
             {
@@ -205,8 +205,8 @@ namespace nethackrf
                 if (val > 62) val = 62;
                 CheckHackrfError(libhackrf.hackrf_set_lna_gain(device, (UInt32)val));
             }
-        } // adjusts VGA gain in range from 0 dB to 62 dB with 2 dB steps
-        unsafe public double TXVGAGainDb
+        } 
+        unsafe public double TXVGAGainDb // adjusts transmitter's VGA gain in range from 0 dB to 47 dB
         {
             set
             {
@@ -215,22 +215,22 @@ namespace nethackrf
                 if (val > 47) val = 47;
                 CheckHackrfError(libhackrf.hackrf_set_txvga_gain(device, (UInt32)val));
             }
-        } // adjusts transmitter's VGA gain in range from 0 dB to 47 dB
-        unsafe public bool AMPEnable
+        } 
+        unsafe public bool AMPEnable  // sets external amp on/off
         {
             set
             {
                 byte val = value? (byte)1 : (byte)0;
                 CheckHackrfError(libhackrf.hackrf_set_amp_enable(device, val));
             }
-        } // sets external amp on/off
-        unsafe public HackRFStream StartRX()
+        }
+        unsafe public HackRFStream StartRX() // creates hackrfstream to read interleaved IQ data and starts hackrf receiver
         {
             if (mode == transceiver_mode_t.OFF)
             {
                 mode = transceiver_mode_t.RX;
                 stream = new HackRFStream(this);
-                stream.callback = stream.StreamCallback;
+                stream.callback = stream.StreamCallback; // delegate is needed to get cdecl pointer to StreamCallback method
                 libhackrf.hackrf_start_rx(device, Marshal.GetFunctionPointerForDelegate<libhackrf.hackrf_delegate>(stream.callback), null);
                 return stream;
             } else
@@ -238,24 +238,24 @@ namespace nethackrf
                 throw new Exception("Device is already streaming. Firstly close existing stream.");
             }
         }
-        unsafe public HackRFStream StartTX()
+        unsafe public HackRFStream StartTX() // creates hackrfstream to read interleaved IQ data. hackrf transmitter won't startup until first write operation occures
         {
             if (mode == transceiver_mode_t.OFF)
             {
                 mode = transceiver_mode_t.TX;
                 stream = new HackRFStream(this);
-                stream.callback = stream.StreamCallback;
-                return stream;
+                stream.callback = stream.StreamCallback; // delegate is needed to get cdecl pointer to StreamCallback method
+                return stream; // start_tx(...) method is not called because there's no data to transmit yet
             }
             else
             {
                 throw new Exception("Device is already streaming. Firstly close existing stream.");
             }
         }
-        unsafe public bool IsStreaming
+        unsafe public bool IsStreaming // returns true if hackrf is currently receiving/transmitting
         {
             get => libhackrf.hackrf_is_streaming(device) == libhackrf.hackrf_error.HACKRF_TRUE;
-        } // returns true if hackrf is currently receiving/transmitting
+        } 
     }
 }
 

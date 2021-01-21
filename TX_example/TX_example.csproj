@@ -14,7 +14,7 @@
     <Deterministic>true</Deterministic>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -45,9 +45,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="hackrf_stream.cs" />
-    <Compile Include="libhackrf.cs" />
-    <Compile Include="nethackrf.cs" />
+    <Compile Include="nethackrf\hackrf_prog.cs" />
+    <Compile Include="nethackrf\hackrf_stream.cs" />
+    <Compile Include="nethackrf\libhackrf.cs" />
+    <Compile Include="nethackrf\nethackrf.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

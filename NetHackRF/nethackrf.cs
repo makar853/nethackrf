@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Security;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace nethackrf
