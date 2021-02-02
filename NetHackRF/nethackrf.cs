@@ -47,7 +47,7 @@ namespace nethackrf
         public class hackrf_sweep_info // structure for sweep options
         {
             public List<Tuple<double, double>> ranges_MHz = new List<Tuple<double, double>>();
-            public UInt32 bytes = 0;
+            public UInt32 samples = 0;
             public double step_MHz = 0;
             public double offset_MHz = 0;
             public bool interpolating = false;
@@ -250,7 +250,6 @@ namespace nethackrf
         }
         unsafe private void InitSweep()
         {
-            libhackrf.hackrf_error error;
             UInt16[] freqs = new UInt16[sweep_info.ranges_MHz.Count * 2];
             for ( int i = 0; i < sweep_info.ranges_MHz.Count; i++)
             {
@@ -259,22 +258,18 @@ namespace nethackrf
             }
             fixed ( UInt16* ptr = freqs)
             {
-                error = libhackrf.hackrf_init_sweep(device, ptr, (UInt32)(sweep_info.ranges_MHz.Count), sweep_info.bytes, (UInt32)(sweep_info.step_MHz * 1e6), (UInt32)(sweep_info.offset_MHz), sweep_info.interpolating ? 1u : 0u);
-            }
-            if ( error != libhackrf.hackrf_error.HACKRF_SUCCESS)
-            {
-                throw new Exception(error.ToString());
+                CheckHackrfError(libhackrf.hackrf_init_sweep(device, ptr, (UInt32)(sweep_info.ranges_MHz.Count), sweep_info.samples * 2, (UInt32)(sweep_info.step_MHz * 1e6), (UInt32)(sweep_info.offset_MHz), sweep_info.interpolating ? 1u : 0u));
             }
          }
         unsafe public HackRFStream StartSweepRX() // creates hackrfstream to receive sweep data
         {
-            InitSweep();
+            InitSweep(); // init sweep mode
             if (mode == transceiver_mode_t.OFF)
             {
                 mode = transceiver_mode_t.RX;
                 stream = new HackRFStream(this);
                 stream.callback = stream.StreamCallback; // delegate is needed to get cdecl pointer to StreamCallback method
-                libhackrf.hackrf_start_rx_sweep(device, Marshal.GetFunctionPointerForDelegate<libhackrf.hackrf_delegate>(stream.callback), null);
+                CheckHackrfError(libhackrf.hackrf_start_rx_sweep(device, Marshal.GetFunctionPointerForDelegate<libhackrf.hackrf_delegate>(stream.callback), null));
                 return stream;
             }
             else
