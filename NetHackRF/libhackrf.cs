@@ -142,5 +142,8 @@ namespace nethackrf
         unsafe public static extern hackrf_error hackrf_spiflash_status(hackrf_device* device, byte* data);
         [DllImport(dllname)]
         unsafe public static extern hackrf_error hackrf_spiflash_clear_status(hackrf_device* device);
+        // cpld programming functions
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_cpld_write(hackrf_device* device, byte* data, UInt32 total_length);
     }
 }
