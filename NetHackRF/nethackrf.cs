@@ -165,7 +165,7 @@ namespace nethackrf
         } 
         private void CheckVersion()
         {
-            if (UsbApiVersion < 0x1002)
+            if (UsbApiVersion < 0x0102)
             {
                 throw new Exception($"Current USB API version is too old (0x{UsbApiVersion:X}). Minimal version is 0x1002.");
             }
@@ -278,7 +278,7 @@ namespace nethackrf
                 freqs[i * 2] = (UInt16)(sweepInfo.rangesMHz[i].Item1);
                 freqs[i * 2 + 1] = (UInt16)(sweepInfo.rangesMHz[i].Item2);
             }
-            fixed ( UInt16* ptr = &freqs[0])
+            fixed ( UInt16* ptr = freqs)
             {
                 CheckHackrfError(libhackrf.hackrf_init_sweep(device, ptr, (UInt32)(sweepInfo.rangesMHz.Count), sweepInfo.stepSamples * 2, (UInt32)(sweepInfo.stepMHz * 1000000), (UInt32)(sweepInfo.offsetMHz * 1000000), sweepInfo.interpolating ? 1u : 0u));
             }
