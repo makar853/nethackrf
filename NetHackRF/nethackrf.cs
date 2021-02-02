@@ -203,7 +203,7 @@ namespace nethackrf
                 val = (val / 2) * 2;
                 if (val < 0) val = 0;
                 if (val > 62) val = 62;
-                CheckHackrfError(libhackrf.hackrf_set_lna_gain(device, (UInt32)val));
+                CheckHackrfError(libhackrf.hackrf_set_vga_gain(device, (UInt32)val));
             }
         } 
         unsafe public double TXVGAGainDb // adjusts transmitter's VGA gain in range from 0 dB to 47 dB
