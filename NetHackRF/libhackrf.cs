@@ -131,5 +131,11 @@ namespace nethackrf
         unsafe public static extern hackrf_error hackrf_rffc5071_read(hackrf_device* device, byte register_number, UInt16* value);
         [DllImport(dllname)]
         unsafe public static extern hackrf_error hackrf_rffc5071_write(hackrf_device* device, byte register_number, UInt16 value);
+
+        // sweep functions
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_init_sweep(hackrf_device* device, UInt16* frequency_list, UInt32 num_ranges, UInt32 num_bytes, UInt32 step_width, UInt32 offset, UInt32 style);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_start_rx_sweep(hackrf_device* device, IntPtr callback, void* rx_ctx);
     }
 }

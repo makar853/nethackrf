@@ -41,8 +41,17 @@ namespace nethackrf
         internal unsafe libhackrf.hackrf_device* device;
         internal transceiver_mode_t mode;
         internal bool TxStarted;
+        internal hackrf_sweep_info sweep_info;
         private bool disposed;
         private HackRFStream stream;
+        public class hackrf_sweep_info // structure for sweep options
+        {
+            public List<Tuple<double, double>> ranges_MHz = new List<Tuple<double, double>>();
+            public UInt32 bytes = 0;
+            public double step_MHz = 0;
+            public double offset_MHz = 0;
+            public bool interpolating = false;
+        }
         public class hackrf_device_info // this class is needed for devices enumeration
         {
             unsafe public NetHackrf OpenDevice()
@@ -65,6 +74,7 @@ namespace nethackrf
             mode = transceiver_mode_t.OFF;
             TxStarted = false;
             disposed = false;
+            sweep_info = new hackrf_sweep_info();
         }
         ~NetHackrf() // NetHackrf class destructor
         {
@@ -234,6 +244,40 @@ namespace nethackrf
                 libhackrf.hackrf_start_rx(device, Marshal.GetFunctionPointerForDelegate<libhackrf.hackrf_delegate>(stream.callback), null);
                 return stream;
             } else
+            {
+                throw new Exception("Device is already streaming. Firstly close existing stream.");
+            }
+        }
+        unsafe private void InitSweep()
+        {
+            libhackrf.hackrf_error error;
+            UInt16[] freqs = new UInt16[sweep_info.ranges_MHz.Count * 2];
+            for ( int i = 0; i < sweep_info.ranges_MHz.Count; i++)
+            {
+                freqs[i * 2] = (UInt16)(sweep_info.ranges_MHz[i].Item1);
+                freqs[i * 2 + 1] = (UInt16)(sweep_info.ranges_MHz[i].Item2);
+            }
+            fixed ( UInt16* ptr = freqs)
+            {
+                error = libhackrf.hackrf_init_sweep(device, ptr, (UInt32)(sweep_info.ranges_MHz.Count), sweep_info.bytes, (UInt32)(sweep_info.step_MHz * 1e6), (UInt32)(sweep_info.offset_MHz), sweep_info.interpolating ? 1u : 0u);
+            }
+            if ( error != libhackrf.hackrf_error.HACKRF_SUCCESS)
+            {
+                throw new Exception(error.ToString());
+            }
+         }
+        unsafe public HackRFStream StartSweepRX() // creates hackrfstream to receive sweep data
+        {
+            InitSweep();
+            if (mode == transceiver_mode_t.OFF)
+            {
+                mode = transceiver_mode_t.RX;
+                stream = new HackRFStream(this);
+                stream.callback = stream.StreamCallback; // delegate is needed to get cdecl pointer to StreamCallback method
+                libhackrf.hackrf_start_rx_sweep(device, Marshal.GetFunctionPointerForDelegate<libhackrf.hackrf_delegate>(stream.callback), null);
+                return stream;
+            }
+            else
             {
                 throw new Exception("Device is already streaming. Firstly close existing stream.");
             }
