@@ -41,16 +41,31 @@ namespace nethackrf
         internal unsafe libhackrf.hackrf_device* device;
         internal transceiver_mode_t mode;
         internal bool TxStarted;
-        internal hackrf_sweep_info sweep_info;
+        public hackrf_sweep_info sweepInfo;
         private bool disposed;
         private HackRFStream stream;
         public class hackrf_sweep_info // structure for sweep options
         {
-            public List<Tuple<double, double>> ranges_MHz = new List<Tuple<double, double>>();
-            public UInt32 samples = 0;
-            public double step_MHz = 0;
-            public double offset_MHz = 0;
+            public List<Tuple<double, double>> rangesMHz = new List<Tuple<double, double>>();
+            public UInt32 StepSamples { get => stepSamples; 
+                set {
+                    UInt32 blocks = value / libhackrf.SAMPLES_PER_BLOCK;
+                    if (blocks == 0) blocks = 1;
+                    stepSamples = blocks * libhackrf.SAMPLES_PER_BLOCK;
+                }
+            }// samples per step should be a multiple of 16384
+            internal UInt32 stepSamples;
+            public double stepMHz = 0;
+            public double offsetMHz = 0;
             public bool interpolating = false;
+            public void ResetRanges()
+            {
+                rangesMHz = new List<Tuple<double, double>>();
+            }
+            public void AddRange( double StartFrequencyMHz, double StopFrequencyMHz)
+            {
+                rangesMHz.Add(new Tuple<double, double>(StartFrequencyMHz, StopFrequencyMHz));
+            }
         }
         public class hackrf_device_info // this class is needed for devices enumeration
         {
@@ -74,7 +89,7 @@ namespace nethackrf
             mode = transceiver_mode_t.OFF;
             TxStarted = false;
             disposed = false;
-            sweep_info = new hackrf_sweep_info();
+            sweepInfo = new hackrf_sweep_info();
         }
         ~NetHackrf() // NetHackrf class destructor
         {
@@ -148,6 +163,13 @@ namespace nethackrf
                 return version;
             }
         } 
+        private void CheckVersion()
+        {
+            if (UsbApiVersion < 0x1002)
+            {
+                throw new Exception($"Current USB API version is too old (0x{UsbApiVersion:X}). Minimal version is 0x1002.");
+            }
+        }
         unsafe public string HackrfVersion // returns hackrf firmware version
         {
             get
@@ -250,19 +272,20 @@ namespace nethackrf
         }
         unsafe private void InitSweep()
         {
-            UInt16[] freqs = new UInt16[sweep_info.ranges_MHz.Count * 2];
-            for ( int i = 0; i < sweep_info.ranges_MHz.Count; i++)
+            UInt16[] freqs = new UInt16[sweepInfo.rangesMHz.Count * 2];
+            for ( int i = 0; i < sweepInfo.rangesMHz.Count; i++)
             {
-                freqs[i * 2] = (UInt16)(sweep_info.ranges_MHz[i].Item1);
-                freqs[i * 2 + 1] = (UInt16)(sweep_info.ranges_MHz[i].Item2);
+                freqs[i * 2] = (UInt16)(sweepInfo.rangesMHz[i].Item1);
+                freqs[i * 2 + 1] = (UInt16)(sweepInfo.rangesMHz[i].Item2);
             }
-            fixed ( UInt16* ptr = freqs)
+            fixed ( UInt16* ptr = &freqs[0])
             {
-                CheckHackrfError(libhackrf.hackrf_init_sweep(device, ptr, (UInt32)(sweep_info.ranges_MHz.Count), sweep_info.samples * 2, (UInt32)(sweep_info.step_MHz * 1e6), (UInt32)(sweep_info.offset_MHz), sweep_info.interpolating ? 1u : 0u));
+                CheckHackrfError(libhackrf.hackrf_init_sweep(device, ptr, (UInt32)(sweepInfo.rangesMHz.Count), sweepInfo.stepSamples * 2, (UInt32)(sweepInfo.stepMHz * 1000000), (UInt32)(sweepInfo.offsetMHz * 1000000), sweepInfo.interpolating ? 1u : 0u));
             }
          }
         unsafe public HackRFStream StartSweepRX() // creates hackrfstream to receive sweep data
         {
+            CheckVersion();
             InitSweep(); // init sweep mode
             if (mode == transceiver_mode_t.OFF)
             {
