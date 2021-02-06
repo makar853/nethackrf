@@ -9,6 +9,7 @@ namespace nethackrf
     internal class libhackrf // functions and types from hackrf.h
     {
         public const string dllname = @"hackrf.dll";
+        public const int SAMPLES_PER_BLOCK = 8192;
         public enum hackrf_error
         {
             HACKRF_SUCCESS = 0,

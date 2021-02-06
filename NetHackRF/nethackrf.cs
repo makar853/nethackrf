@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace nethackrf
 {
 
-    public class NetHackrf : IDisposable // hackrf device class
+    public partial class NetHackrf : IDisposable // hackrf device class
     {
         private class StaticFinalyzer // crutch to make static destructor
         {
@@ -166,9 +166,9 @@ namespace nethackrf
         } 
         private void CheckVersion()
         {
-            if (UsbApiVersion < 0x0102)
+            if (UsbApiVersion < 0x0104)
             {
-                throw new Exception($"Current USB API version is too old (0x{UsbApiVersion:X}). Minimal version is 0x1002.");
+                throw new Exception($"Current USB API version is too old (0x{UsbApiVersion:X}). Minimal version is 0x0104.");
             }
         }
         unsafe public string HackrfVersion // returns hackrf firmware version
