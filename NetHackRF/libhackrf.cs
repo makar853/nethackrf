@@ -145,5 +145,10 @@ namespace nethackrf
         // cpld programming functions
         [DllImport(dllname)]
         unsafe public static extern hackrf_error hackrf_cpld_write(hackrf_device* device, byte* data, UInt32 total_length);
+		// sweep functions
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_init_sweep(hackrf_device* device, UInt16* frequency_list, UInt32 num_ranges, UInt32 num_bytes, UInt32 step_width, UInt32 offset, UInt32 style);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_start_rx_sweep(hackrf_device* device, IntPtr callback, void* rx_ctx);
     }
 }

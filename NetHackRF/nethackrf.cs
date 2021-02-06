@@ -42,8 +42,32 @@ namespace nethackrf
         internal unsafe libhackrf.hackrf_device* device;
         internal transceiver_mode_t mode;
         internal bool TxStarted;
+        public hackrf_sweep_info sweepInfo;
         private bool disposed;
         private HackRFStream stream;
+        public class hackrf_sweep_info // structure for sweep options
+        {
+            public List<Tuple<double, double>> rangesMHz = new List<Tuple<double, double>>();
+            public UInt32 StepSamples { get => stepSamples; 
+                set {
+                    UInt32 blocks = value / libhackrf.SAMPLES_PER_BLOCK;
+                    if (blocks == 0) blocks = 1;
+                    stepSamples = blocks * libhackrf.SAMPLES_PER_BLOCK;
+                }
+            }// samples per step should be a multiple of 16384
+            internal UInt32 stepSamples = libhackrf.SAMPLES_PER_BLOCK;
+            public double stepMHz = 0;
+            public double offsetMHz = 0;
+            public bool interpolating = false;
+            public void ResetRanges()
+            {
+                rangesMHz = new List<Tuple<double, double>>();
+            }
+            public void AddRange( double StartFrequencyMHz, double StopFrequencyMHz)
+            {
+                rangesMHz.Add(new Tuple<double, double>(StartFrequencyMHz, StopFrequencyMHz));
+            }
+        }
         public class hackrf_device_info // this class is needed for devices enumeration
         {
             unsafe public NetHackrf OpenDevice()
@@ -66,6 +90,7 @@ namespace nethackrf
             mode = transceiver_mode_t.OFF;
             TxStarted = false;
             disposed = false;
+            sweepInfo = new hackrf_sweep_info();
         }
         ~NetHackrf() // NetHackrf class destructor
         {
@@ -139,6 +164,13 @@ namespace nethackrf
                 return version;
             }
         } 
+        private void CheckVersion()
+        {
+            if (UsbApiVersion < 0x0102)
+            {
+                throw new Exception($"Current USB API version is too old (0x{UsbApiVersion:X}). Minimal version is 0x1002.");
+            }
+        }
         unsafe public string HackrfVersion // returns hackrf firmware version
         {
             get
@@ -235,6 +267,36 @@ namespace nethackrf
                 libhackrf.hackrf_start_rx(device, Marshal.GetFunctionPointerForDelegate<libhackrf.hackrf_delegate>(stream.callback), null);
                 return stream;
             } else
+            {
+                throw new Exception("Device is already streaming. Firstly close existing stream.");
+            }
+        }
+        unsafe private void InitSweep()
+        {
+            UInt16[] freqs = new UInt16[sweepInfo.rangesMHz.Count * 2];
+            for ( int i = 0; i < sweepInfo.rangesMHz.Count; i++)
+            {
+                freqs[i * 2] = (UInt16)(sweepInfo.rangesMHz[i].Item1);
+                freqs[i * 2 + 1] = (UInt16)(sweepInfo.rangesMHz[i].Item2);
+            }
+            fixed ( UInt16* ptr = freqs)
+            {
+                CheckHackrfError(libhackrf.hackrf_init_sweep(device, ptr, (UInt32)(sweepInfo.rangesMHz.Count), sweepInfo.stepSamples * 2, (UInt32)(sweepInfo.stepMHz * 1000000), (UInt32)(sweepInfo.offsetMHz * 1000000), sweepInfo.interpolating ? 1u : 0u));
+            }
+         }
+        unsafe public HackRFStream StartSweepRX() // creates hackrfstream to receive sweep data
+        {
+            CheckVersion();
+            InitSweep(); // init sweep mode
+            if (mode == transceiver_mode_t.OFF)
+            {
+                mode = transceiver_mode_t.RX;
+                stream = new HackRFStream(this);
+                stream.callback = stream.StreamCallback; // delegate is needed to get cdecl pointer to StreamCallback method
+                CheckHackrfError(libhackrf.hackrf_start_rx_sweep(device, Marshal.GetFunctionPointerForDelegate<libhackrf.hackrf_delegate>(stream.callback), null));
+                return stream;
+            }
+            else
             {
                 throw new Exception("Device is already streaming. Firstly close existing stream.");
             }
