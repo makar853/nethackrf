@@ -54,7 +54,7 @@ namespace nethackrf
                     stepSamples = blocks * libhackrf.SAMPLES_PER_BLOCK;
                 }
             }// samples per step should be a multiple of 16384
-            internal UInt32 stepSamples;
+            internal UInt32 stepSamples = libhackrf.SAMPLES_PER_BLOCK;
             public double stepMHz = 0;
             public double offsetMHz = 0;
             public bool interpolating = false;
