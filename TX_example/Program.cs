@@ -11,7 +11,7 @@ namespace main_test
         {
             System.Console.WriteLine(NetHackrf.HackrfLibraryVersion());
             System.Console.WriteLine(NetHackrf.HackrfLibraryRelease());
-            var devices = NetHackrfLow.HackrfDeviceList();
+            var devices = NetHackrf.HackrfDeviceList();
             foreach (var i in devices)
             {
                 System.Console.WriteLine($"serial=\"{i.serial_number}\", boardId=\"{i.usb_board_id}\", index={i.usb_device_index}");
@@ -23,7 +23,7 @@ namespace main_test
                 System.Console.ReadKey();
                 return;
             }
-            NetHackrfLow device = devices[0].OpenDevice();
+            NetHackrf device = devices[0].OpenDevice();
             System.Console.WriteLine(device.HackrfVersion);
             System.Console.WriteLine(device.UsbApiVersion);
             device.CarrierFrequencyMHz = 444.0;

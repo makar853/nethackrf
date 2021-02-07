@@ -3,12 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace nethackrf
 {
-    public class NetHackrfLow : NetHackrf
+    public partial class NetHackrf
     {
-        unsafe internal NetHackrfLow(libhackrf.hackrf_device* device) : base(device)
-        {
-
-        }
         public enum HackrfChip
         {
             max2837, // direct-conversion zero-IF RF transceiver
@@ -58,7 +54,7 @@ namespace nethackrf
             var error = libhackrf.hackrf_spiflash_erase(device);
             if (error != libhackrf.hackrf_error.HACKRF_SUCCESS) throw new Exception(error.ToString("G"));
         }
-        public unsafe void SpiflashWrite(byte[] data, uint address)
+        public unsafe void SpiflashWrite( byte[] data, uint address)
         {
             libhackrf.hackrf_error error;
             if (address > ushort.MaxValue) throw new ArgumentOutOfRangeException();
@@ -80,6 +76,14 @@ namespace nethackrf
             }
             if (error != libhackrf.hackrf_error.HACKRF_SUCCESS) throw new Exception(error.ToString("G"));
             return data;
+        }
+        public unsafe void WriteCPLD( byte[] data)
+        {
+            libhackrf.hackrf_error error;
+            fixed (byte* ptr = data)
+            {
+                error = libhackrf.hackrf_cpld_write(device, ptr, (UInt32)(data.Length) );
+            }
         }
     } // this class defines low-level programming methods
 }

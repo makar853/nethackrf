@@ -9,6 +9,7 @@ namespace nethackrf
     internal class libhackrf // functions and types from hackrf.h
     {
         public const string dllname = @"hackrf.dll";
+        public const int SAMPLES_PER_BLOCK = 8192;
         public enum hackrf_error
         {
             HACKRF_SUCCESS = 0,
@@ -142,5 +143,13 @@ namespace nethackrf
         unsafe public static extern hackrf_error hackrf_spiflash_status(hackrf_device* device, byte* data);
         [DllImport(dllname)]
         unsafe public static extern hackrf_error hackrf_spiflash_clear_status(hackrf_device* device);
+        // cpld programming functions
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_cpld_write(hackrf_device* device, byte* data, UInt32 total_length);
+		// sweep functions
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_init_sweep(hackrf_device* device, UInt16* frequency_list, UInt32 num_ranges, UInt32 num_bytes, UInt32 step_width, UInt32 offset, UInt32 style);
+        [DllImport(dllname)]
+        unsafe public static extern hackrf_error hackrf_start_rx_sweep(hackrf_device* device, IntPtr callback, void* rx_ctx);
     }
 }
