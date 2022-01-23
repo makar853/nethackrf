@@ -319,7 +319,7 @@ namespace nethackrf
         {
             get => libhackrf.hackrf_is_streaming(device) == libhackrf.hackrf_error.HACKRF_TRUE;
         } 
-        unsafe public void Reset()
+        unsafe public void Reset() // resets device as reset button was pressed
         {
             CheckHackrfError(libhackrf.hackrf_reset(device));
             Dispose();

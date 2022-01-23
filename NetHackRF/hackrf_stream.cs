@@ -38,7 +38,7 @@ namespace nethackrf
 
             }
         }
-        private void get_event()
+        private void get_event() // waiting for event from hackrf.dll. If nothing happens in 5 seconds than the method throws exception
         {
             if(event_sem.WaitOne(5000) == false) throw new TimeoutException("timeout occured while trying to access hackRF stream");
         }
