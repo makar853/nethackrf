@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "FM_RX_CORE_example": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}
