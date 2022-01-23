@@ -40,7 +40,7 @@ namespace nethackrf
         }
         private void get_event()
         {
-            event_sem.WaitOne(5000);
+            if(event_sem.WaitOne(5000) == false) throw new TimeoutException("timeout occured while trying to access hackRF stream");
         }
         unsafe internal int StreamCallback(libhackrf.hackrf_transfer* transfer) // hackrf.dll calls this method to exchange data with device
         {

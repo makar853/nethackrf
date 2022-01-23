@@ -319,6 +319,11 @@ namespace nethackrf
         {
             get => libhackrf.hackrf_is_streaming(device) == libhackrf.hackrf_error.HACKRF_TRUE;
         } 
+        unsafe public void Reset()
+        {
+            CheckHackrfError(libhackrf.hackrf_reset(device));
+            Dispose();
+        }
     }
 }
 
